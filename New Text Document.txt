@@ -9,8 +9,8 @@
 <body class="bg-gray-50 text-gray-800">
 
     <header class="bg-red-600 text-white text-center py-8 shadow-md">
-        <h1 class="text-3xl font-bold">KHO TÀI LIỆU TIẾNG TRUNG KUNGFU</h1>
-        <p class="mt-2 text-red-100">Học từ vựng, ngữ pháp, bài giảng miễn phí và chất lượng cao</p>
+        <h1 class="text-3xl font-bold">KHO TÀI LIỆU TIẾNG TRUNG</h1>
+        <p class="mt-2 text-red-100">Học từ vựng, ngữ pháp, bài giảng chất lượng cao</p>
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-8">
@@ -24,34 +24,41 @@
     </footer>
 
     <script>
-        // CHÚ Ý: Hãy thay đoạn chữ bên dưới bằng ID file Google Sheets bạn copy ở Bước 1
-        const SHEET_ID = '1tAhUvW__1s77kGjRyejXmg3lKPQ_H7SoWswmBGrrVn8';
+        // Điền lại chính xác ID file Google Sheets của bạn vào đây
+        const SHEET_ID = '1tAhUvW__1s77kGjRyejXmg3lKPQ_H7SoWswmBGrrVn8'; 
         
-       const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Sheet1`;
+        // Đường link lấy dữ liệu dạng CSV (Bảo mật, mượt mà và không bao giờ lỗi 404)
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 
         fetch(url)
             .then(res => res.text())
-            .then(data => {
-                // Định dạng lại dữ liệu nhận về từ Google
-                const temp = data.substring(47, data.length - 2);
-                const json = JSON.parse(temp);
-                const rows = json.table.rows;
+            .then(csvText => {
+                // Hàm tách dữ liệu CSV thành mảng dữ liệu sạch
+                const lines = csvText.split("\n").map(line => {
+                    // Xử lý dấu phẩy và dấu ngoặc kép trong file CSV
+                    return line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
+                });
                 
                 let html = '';
                 
-                // Đọc từng dòng dữ liệu và vẽ giao diện
-                rows.forEach(row => {
-                    const id = row.c[0] ? row.c[0].v : '';
-                    const title = row.c[1] ? row.c[1].v : 'Chưa có tên';
-                    const category = row.c[2] ? row.c[2].v : 'Chưa phân mục';
-                    const description = row.c[3] ? row.c[3].v : '';
-                    const image = row.c[4] ? row.c[4].v : 'https://via.placeholder.com/150';
-                    const price = row.c[5] ? row.c[5].v : 'Miễn phí';
-                    const link = row.c[6] ? row.c[6].v : '#';
+                // Lặp qua các dòng dữ liệu (Bỏ qua dòng tiêu đề thứ 1)
+                for (let i = 1; i < lines.length; i++) {
+                    const row = lines[i];
+                    if (row.length < 2) continue; // Bỏ qua dòng trống
 
-                    // Kiểm tra nút bấm là Tải miễn phí hay Mua qua Chatbot
+                    // Hàm xóa dấu ngoặc kép thừa ở đầu và cuối chữ
+                    const clean = (str) => str ? str.replace(/^"|"$/g, '').trim() : '';
+
+                    const id = clean(row[0]);
+                    const title = clean(row[1]);
+                    const category = clean(row[2]);
+                    const description = clean(row[3]);
+                    const image = clean(row[4]);
+                    const price = clean(row[5]);
+                    const link = clean(row[6]);
+
                     let buttonHTML = '';
-                    if (price === 'Miễn phí' || price === 0) {
+                    if (price === 'Miễn phí' || price === '0' || price === '') {
                         buttonHTML = `<a href="${link}" target="_blank" class="w-full block text-center bg-green-500 hover:bg-green-600 text-white font-medium py-2 rounded-md transition">Tải Miễn Phí</a>`;
                     } else {
                         buttonHTML = `<a href="${link}" target="_blank" class="w-full block text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md transition">Mua Ngay (${price})</a>`;
@@ -70,14 +77,16 @@
                             </div>
                         </div>
                     `;
-                });
+                }
 
                 document.getElementById('danh-sach-tai-lieu').innerHTML = html;
             })
             .catch(err => {
-                document.getElementById('danh-sach-tai-lieu').innerHTML = '<p class="text-center col-span-3 text-red-500">Lỗi không thể tải dữ liệu. Vui lòng kiểm tra lại ID Google Sheets!</p>';
+                document.getElementById('danh-sach-tai-lieu').innerHTML = '<p class="text-center col-span-3 text-red-500">Lỗi hệ thống! Vui lòng kiểm tra lại kết nối mạng hoặc file Google Sheets.</p>';
                 console.error(err);
             });
     </script>
+</body>
+</html>
 </body>
 </html>
